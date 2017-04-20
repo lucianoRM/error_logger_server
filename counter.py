@@ -55,6 +55,23 @@ def get_count(name):
         memcache.add(name, total, 60)
     return total
 
+def get_count_async(name):
+    total = memcache.get(name)
+    if total is None:
+        futures = []
+        all_keys = GeneralCounterShardConfig.all_keys(name)
+        futures = ndb.get_multi_async(all_keys)
+        return futures
+    return ndb.Future().set_result(total)
+
+def getTotal(futureList):
+    if len(futureList) == 1:
+        return futureList[0].get_result()
+    total = 0
+    for future in futureList:
+        if future.get_result():
+            total += future.get_result().count
+    return total
 
 def increment(name):
     """Increment the value for a given sharded counter.

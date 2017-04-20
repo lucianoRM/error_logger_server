@@ -1,8 +1,9 @@
-import time
+import json
 
-import application
+import logging
+from google.appengine.runtime import DeadlineExceededError
+
 import counter
-import errormsg
 import requesthandler
 from errorline import ErrorLine
 from flask import Flask, request, render_template
@@ -23,7 +24,7 @@ def test():
 
 @app.route('/errors', methods=['POST'])
 def errors():
-   return post_errors()
+ return post_errors()
 
 def post_errors():
     try:
@@ -31,10 +32,12 @@ def post_errors():
         return "OK!"
     except KeyError as e:
         return "",400
+    except DeadlineExceededError as e:
+        logging.warn(e)
 
 @app.route('/errors/apps' , methods=['GET'])
 def error_apps():
-    return get_apps_count()
+    return json.dumps(get_apps_count())
 
 def get_apps_count(app=None):
     return requesthandler.getAppCount(app)

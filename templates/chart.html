@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="en"><head>   <meta charset="utf-8" />   <title>Chart.js </title>      <!-- import plugin script -->   <script src='../../static/Chart.min.js'></script>   </head><body>
-<h1>Error count</h1><!-- bar chart canvas element --><canvas id="chart" width="600" height="400"></canvas>
+<h1>Error count</h1><!-- bar chart canvas element --><canvas id="chart" width={{(values|length) * 50}} height="500"></canvas>
 <script>
    // bar chart data
    var barData = {
@@ -21,8 +21,12 @@
    // get bar chart canvas
    var mychart = document.getElementById("chart").getContext("2d");
 
-   steps = 10
-   max = {{ values | sort(true) | first }}
+   steps = 10;
+   max = {{ values | sort(true) | first }};
+   if(max === null) {
+       max = 10;
+   }
+
    // draw bar chart
    new Chart(mychart).Bar(barData, {
         scaleOverride: true,

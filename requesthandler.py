@@ -8,6 +8,8 @@ import errormsg
 
 def createErrorMsgFromJson(jsonString):
     jsonObject = json.loads(jsonString)
+    while(type(jsonObject) == unicode):
+        jsonObject = json.loads(jsonObject)
     userName = jsonObject['userName']
     appName = jsonObject['appName']
     timestamp = datetime.datetime.fromtimestamp(jsonObject['timestamp'])
@@ -20,8 +22,7 @@ def createErrorMsgFromJson(jsonString):
 def storeFromJson(jsonString):
     errorMessage = createErrorMsgFromJson(jsonString)
     errormsg.store(errorMessage)
-    application.createIfNotExistent(errorMessage.appName)
-    counter.increment(errorMessage.appName)
+    application.upsert(errorMessage.appName)
 
 
 def toDicc(appList):
@@ -30,8 +31,21 @@ def toDicc(appList):
         dicc[app.appName] = counter.get_count(app.appName)
     return dicc
 
+
+def getAppsCounterValuesAsync(appList):
+    futureList = []
+    for app in appList:
+        futureList.append(counter.get_count_async(app.appName))
+    return futureList
+
+
+def toDiccFromFutures(apps,counters):
+    dicc = {}
+    for i in range(len(apps)):
+        dicc[apps[i].appName] = counter.getTotal(counters[i])
+    return dicc
+
+
 def getAppCount(app=None):
     if not app:
-        return toDicc(application.getAllApps())
-    else:
-        return toDicc(application.getApp([app]))
+        return application.getAllApps()
