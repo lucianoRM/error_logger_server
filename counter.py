@@ -7,14 +7,12 @@ import random
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 
-
-SHARD_KEY_TEMPLATE = 'shard-{}-{:d}'
-DEFAULT_SHARD_COUNT = 20
+from config import config as configuration_values
 
 
 class GeneralCounterShardConfig(ndb.Model):
     """Tracks the number of shards for each named counter."""
-    num_shards = ndb.IntegerProperty(default=DEFAULT_SHARD_COUNT)
+    num_shards = ndb.IntegerProperty(default=configuration_values.default_shard_count())
 
     @classmethod
     def all_keys(cls, name):
@@ -26,7 +24,7 @@ class GeneralCounterShardConfig(ndb.Model):
                 counter shards that could exist.
         """
         config = cls.get_or_insert(name)
-        shard_key_strings = [SHARD_KEY_TEMPLATE.format(name, index)
+        shard_key_strings = [configuration_values.shard_key_template().format(name, index)
                              for index in range(config.num_shards)]
         return [ndb.Key(GeneralCounterShard, shard_key_string)
                 for shard_key_string in shard_key_strings]
@@ -82,7 +80,7 @@ def increment(name):
     _increment(name, config.num_shards)
 
 
-@ndb.transactional(xg=True)
+@ndb.transactional
 def _increment(name, num_shards):
     """Transactional helper to increment the value for a given sharded counter.
     Also takes a number of shards to determine which shard will be used.
@@ -91,7 +89,7 @@ def _increment(name, num_shards):
         num_shards: How many shards to use.
     """
     index = random.randint(0, num_shards - 1)
-    shard_key_string = SHARD_KEY_TEMPLATE.format(name, index)
+    shard_key_string = configuration_values.shard_key_template().format(name, index)
     counter = GeneralCounterShard.get_by_id(shard_key_string)
     if counter is None:
         counter = GeneralCounterShard(id=shard_key_string)

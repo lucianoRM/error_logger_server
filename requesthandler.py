@@ -10,11 +10,11 @@ def createErrorMsgFromJson(jsonString):
     jsonObject = json.loads(jsonString)
     while(type(jsonObject) == unicode):
         jsonObject = json.loads(jsonObject)
-    userName = jsonObject['userName']
-    appName = jsonObject['appName']
+    userName = str(jsonObject['userName'])
+    appName = str(jsonObject['appName'])
     timestamp = datetime.datetime.fromtimestamp(jsonObject['timestamp'])
-    os = jsonObject['os']
-    errorText = jsonObject['errorText']
+    os = str(jsonObject['os'])
+    errorText = str(jsonObject['errorText'])
     return errormsg.ErrorMessage(userName=userName, appName=appName,
                                  timestamp=timestamp, os=os,
                                  errorText=errorText)
@@ -46,6 +46,5 @@ def toDiccFromFutures(apps,counters):
     return dicc
 
 
-def getAppCount(app=None):
-    if not app:
-        return application.getAllApps()
+def getAppCount(pagenumber):
+    return application.getAllApps(pagenumber)

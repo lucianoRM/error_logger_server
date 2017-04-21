@@ -1,43 +1,69 @@
-<!DOCTYPE html><html lang="en"><head>   <meta charset="utf-8" />   <title>Chart.js </title>      <!-- import plugin script -->   <script src='../../static/Chart.min.js'></script>   </head><body>
-<h1>Error count</h1><!-- bar chart canvas element --><canvas id="chart" width={{(values|length) * 50}} height="500"></canvas>
-<script>
-   // bar chart data
-   var barData = {
-   labels : [{% for item in labels %}
-                  "{{item}}",
-              {% endfor %}],
-   datasets : [
-      {
-            fillColor: "rgba(151,187,205,0.2)",
-            strokeColor: "rgba(151,187,205,1)",
-            pointColor: "rgba(151,187,205,1)",
-         data : [{% for item in values %}
-                      {{item}},
-                    {% endfor %}]
-      }
-      ]
-   }
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Fiuba</title>
+        <!-- import plugin script -->
+        <script src='../../static/Chart.min.js'></script>
+    </head>
+    <body>
+    <div style="text-align: center">
+        <a style="display: inline" href={{ previous }}>previous</a>
+        <h1 style="display: inline">Page: {{page}}</h1>
+        <a style="display: inline" href={{ next }}>next</a>
+    </div>
+        <!-- bar chart canvas element -->
+        <canvas id="chart" height="115"></canvas>
 
-   // get bar chart canvas
-   var mychart = document.getElementById("chart").getContext("2d");
+        <script>
 
-   steps = 10;
-   max = {{ values | sort(true) | first }};
-   if(max === null) {
-       max = 10;
-   }
+            var getRandomColor = function () {
+                var red = Math.floor(Math.random() * 255);
+                var green = Math.floor(Math.random() * 255);
+                var blue = Math.floor(Math.random() * 255);
+                return "rgba(" + red + ", " + green + ", " + blue + ",0.2)";
+            }
 
-   // draw bar chart
-   new Chart(mychart).Bar(barData, {
-        scaleOverride: true,
-        scaleSteps: steps,
-        scaleStepWidth: Math.ceil(max / steps),
-        scaleStartValue: 0,
-        scaleShowVerticalLines: true,
-        scaleShowGridLines : true,
-        barShowStroke : true,
-        scaleShowLabels: true
-   });
+            var getRandomColors = function (size) {
+                var i = 0;
+                var r = [];
+                while(i < size) {
+                    r.push(getRandomColor())
+                    i++;
+                }
+                return r
+            }
 
-</script>
-</body></html>
+            var ctx = document.getElementById("chart").getContext("2d");
+            var data = {
+                labels: [{% for item in labels %}
+                                "{{item}}",
+                         {% endfor %}],
+                datasets: [
+                    {
+                        label: "App error count",
+                        backgroundColor: getRandomColors({{ values | length}}),
+                        borderWidth: 1,
+                        data:[{% for item in values %}
+                                  {{item}},
+                                {% endfor %}]
+
+                    }
+                ]
+            };
+            var myBarChart = new Chart(ctx, {
+                type: 'horizontalBar',
+                data: data,
+                options: {
+                    scales: {
+                        xAxes: [{
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        }]
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>

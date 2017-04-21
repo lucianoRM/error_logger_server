@@ -4,6 +4,7 @@ import logging
 from google.appengine.runtime import DeadlineExceededError
 
 import counter
+import pages
 import requesthandler
 from errorline import ErrorLine
 from flask import Flask, request, render_template
@@ -39,16 +40,26 @@ def post_errors():
 def error_apps():
     return json.dumps(get_apps_count())
 
-def get_apps_count(app=None):
-    return requesthandler.getAppCount(app)
+def get_apps_count(pagenumber=0):
+    return requesthandler.getAppCount(pagenumber)
 
 
 @app.route('/errors/apps/chart', methods=['GET'])
 def chart():
-    apps = get_apps_count()
+    page = request.args.get('page')
+    if not page:
+        page = 0
+    page = int(page)
+    if page < 0:
+        page = 0
+    apps, page = get_apps_count(page)
     labels = apps.keys()
     values = apps.values()
-    return render_template('chart.html', values=values, labels=labels)
+    next = page+1
+    previous = page-1
+    if previous < 0:
+        previous = 0
+    return render_template('chart.html', values=values, labels=labels , page=page, next="?page=" + str(next), previous="?page=" + str(previous))
 
 
 
