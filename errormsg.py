@@ -8,7 +8,7 @@ import counter
 class ErrorMessage(ndb.Model):
     userName = ndb.StringProperty(indexed=False)
     appName = ndb.StringProperty()
-    timestamp = ndb.DateTimeProperty()
+    timestamp = ndb.IntegerProperty()
     os = ndb.StringProperty()
     errorText = ndb.StringProperty()
 

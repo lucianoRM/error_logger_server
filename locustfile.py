@@ -2,6 +2,7 @@ import json
 import random
 import string
 
+import time
 from locust import HttpLocust, TaskSet, task
 
 class UserBehavior(TaskSet):
@@ -18,7 +19,7 @@ class UserBehavior(TaskSet):
         dicc = {
             "userName" : "luciano",
             "appName" : random.choice(self.words),
-            "timestamp" : 1492557934,
+            "timestamp" : int(time.time()),
             "os" : "Linux",
             "errorText" : "Error!"
         }

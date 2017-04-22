@@ -23,8 +23,9 @@ class GeneralCounterShardConfig(ndb.Model):
             The full list of ndb.Key values corresponding to all the possible
                 counter shards that could exist.
         """
+
         config = cls.get_or_insert(name)
-        shard_key_strings = [configuration_values.shard_key_template().format(name, index)
+        shard_key_strings = [createShardKey(name, index)
                              for index in range(config.num_shards)]
         return [ndb.Key(GeneralCounterShard, shard_key_string)
                 for shard_key_string in shard_key_strings]
@@ -71,13 +72,17 @@ def getTotal(futureList):
             total += future.get_result().count
     return total
 
-def increment(name):
+def increment(name,timestamp):
     """Increment the value for a given sharded counter.
     Args:
         name: The name of the counter.
     """
     config = GeneralCounterShardConfig.get_or_insert(name)
     _increment(name, config.num_shards)
+
+
+def createShardKey(name,index):
+    return configuration_values.shard_key_template().format(name, index)
 
 
 @ndb.transactional
@@ -89,7 +94,7 @@ def _increment(name, num_shards):
         num_shards: How many shards to use.
     """
     index = random.randint(0, num_shards - 1)
-    shard_key_string = configuration_values.shard_key_template().format(name, index)
+    shard_key_string = createShardKey(name, index)
     counter = GeneralCounterShard.get_by_id(shard_key_string)
     if counter is None:
         counter = GeneralCounterShard(id=shard_key_string)
@@ -99,18 +104,7 @@ def _increment(name, num_shards):
     memcache.incr(name)
 
 
-@ndb.transactional
-def increase_shards(name, num_shards):
-    """Increase the number of shards for a given sharded counter.
-    Will never decrease the number of shards.
-    Args:
-        name: The name of the counter.
-        num_shards: How many shards to use.
-    """
-    config = GeneralCounterShardConfig.get_or_insert(name)
-    if config.num_shards < num_shards:
-        config.num_shards = num_shards
-        config.put()
+
 
 
 

@@ -1,4 +1,5 @@
 import datetime
+import time
 import json
 
 import application
@@ -12,7 +13,7 @@ def createErrorMsgFromJson(jsonString):
         jsonObject = json.loads(jsonObject)
     userName = str(jsonObject['userName'])
     appName = str(jsonObject['appName'])
-    timestamp = datetime.datetime.fromtimestamp(jsonObject['timestamp'])
+    timestamp = int(jsonObject['timestamp'])
     os = str(jsonObject['os'])
     errorText = str(jsonObject['errorText'])
     return errormsg.ErrorMessage(userName=userName, appName=appName,
@@ -22,14 +23,7 @@ def createErrorMsgFromJson(jsonString):
 def storeFromJson(jsonString):
     errorMessage = createErrorMsgFromJson(jsonString)
     errormsg.store(errorMessage)
-    application.upsert(errorMessage.appName)
-
-
-def toDicc(appList):
-    dicc = {}
-    for app in appList:
-        dicc[app.appName] = counter.get_count(app.appName)
-    return dicc
+    application.upsert(errorMessage.appName, errorMessage.timestamp)
 
 
 def getAppsCounterValuesAsync(appList):
@@ -46,5 +40,9 @@ def toDiccFromFutures(apps,counters):
     return dicc
 
 
-def getAppCount(pagenumber):
-    return application.getAllApps(pagenumber)
+def getAppCount(date,pagenumber):
+    try:
+        timestamp = int(time.mktime(datetime.datetime.strptime(date, '%Y%m%d%H%M%S').timetuple()))
+    except:
+        timestamp = int(time.time())
+    return application.getAllApps(timestamp, pagenumber)

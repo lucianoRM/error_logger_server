@@ -1,8 +1,12 @@
+import datetime
+from time import gmtime, time
+
 from google.appengine.api import memcache
 from google.appengine.ext import ndb
 
 import counter
 import pages
+from config import config
 
 APP_KEY = 'application'
 
@@ -14,24 +18,27 @@ class Application(ndb.Model):
     def queryAll(cls):
         return cls.query()
 
+def createAppKey(appName,timestamp):
+    return appName+"-"+str(timestamp)
 
-def upsert(appName):
-    app = Application.get_by_id_async(appName)
-    memcache.incr(key=appName)
-    counter.increment(appName)
+def getTimeInterval(timestamp):
+    remainder = timestamp % config.chart_reset_time()
+    return timestamp - remainder
+
+def upsert(appName,timestamp):
+    timeInterval = getTimeInterval(timestamp)
+    timeInterval = str(timeInterval)
+    app = Application.get_by_id_async(createAppKey(appName,timeInterval))
+    counter.increment(createAppKey(appName,timeInterval),timeInterval)
     if not app.get_result():
-        app = Application(appName=appName, id=appName)
+        app = Application(appName=appName, id=createAppKey(appName,timeInterval))
         app.put()
-        pages.upsert(APP_KEY, appName)
+        pages.upsert(APP_KEY,timeInterval, createAppKey(appName, timeInterval))
 
 
-def getAppCount(appName):
-    app = memcache.get(appName)
-    if not app:
-        return Application.get_by_id(appName)
-
-def getAllApps(pagenumber=0):
-    apps,pagenumber = pages.getPage(APP_KEY,pagenumber)
+def getAllApps(timestamp,pagenumber):
+    timeInterval = getTimeInterval(timestamp)
+    apps,pagenumber = pages.getPage(APP_KEY,getTimeInterval(timeInterval),pagenumber)
     appCount = memcache.get_multi(apps)
     missing_keys_futures = {}
 
