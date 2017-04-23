@@ -29,7 +29,7 @@ def upsert(appName,timestamp):
     timeInterval = getTimeInterval(timestamp)
     timeInterval = str(timeInterval)
     app = Application.get_by_id_async(createAppKey(appName,timeInterval))
-    counter.increment(createAppKey(appName,timeInterval),timeInterval)
+    counter.increment(createAppKey(appName,timeInterval))
     if not app.get_result():
         app = Application(appName=appName, id=createAppKey(appName,timeInterval))
         app.put()
@@ -55,5 +55,5 @@ def getAllApps(timestamp,pagenumber):
 
     # add missing keys to memcache
     memcache.set_multi(memcache_update)
-    return appCount, pagenumber
+    return appCount, pagenumber, timeInterval
 

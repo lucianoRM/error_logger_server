@@ -6,19 +6,18 @@
         <!-- import plugin script -->
         <script src='../../static/Chart.min.js'></script>
     </head>
-    <body>
     <div style="text-align: center">
-        <a style="display: inline" href={{ previousDate }}>previous</a>
-        <h3 style="display: inline">From: {{ date }} to {{ toDate }}</h3>
-        <a style="display: inline" href={{ nextDate }}>next</a>
+        <h1>Top {{ values | length }}</h1>
     </div>
     <div style="text-align: center">
         <a style="display: inline" href={{ previous }}>previous</a>
-        <h1 style="display: inline">Page: {{page}}</h1>
+        <h3 style="display: inline">From: {{ fromDate }} to {{ toDate }}</h3>
         <a style="display: inline" href={{ next }}>next</a>
     </div>
+    <div>
         <!-- bar chart canvas element -->
         <canvas id="chart" height="115"></canvas>
+    </div>>
 
         <script>
 
@@ -56,19 +55,22 @@
                     }
                 ]
             };
-            var myBarChart = new Chart(ctx, {
-                type: 'horizontalBar',
+
+            var myLineChart = new Chart(ctx, {
+                type: 'bar',
                 data: data,
                 options: {
+                    showLines : false,
                     scales: {
-                        xAxes: [{
+                        yAxes: [{
                             ticks: {
                                 beginAtZero: true
                             }
                         }]
                     }
+
                 }
-            });
+            })
         </script>
     </body>
 </html>

@@ -27,3 +27,11 @@ def chart_reset_time():
 def shard_config_template():
     return Config.get(section="Counter", option="SHARD_CONFIG_KEY_TEMPLATE")
 
+def error_line_key_template():
+    return Config.get(section="ErrorLine", option="KEY_TEMPLATE")
+
+def top_reset_time():
+    return int(Config.get(section="ErrorLine", option="RESET_TIME"))
+
+def top_quantity():
+    return int(Config.get(section="ErrorLine", option="TOP_QUANTITY"))

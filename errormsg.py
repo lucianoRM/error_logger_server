@@ -11,8 +11,10 @@ class ErrorMessage(ndb.Model):
     timestamp = ndb.IntegerProperty()
     os = ndb.StringProperty()
     errorText = ndb.StringProperty()
+    stacktrace = ndb.StringProperty()
 
 
 @ndb.transactional
 def store(errorMessage):
     errorMessage.put()
+

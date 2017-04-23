@@ -4,7 +4,9 @@ import json
 
 import application
 import counter
+import errorline
 import errormsg
+import stacktraceparser
 
 
 def createErrorMsgFromJson(jsonString):
@@ -16,13 +18,15 @@ def createErrorMsgFromJson(jsonString):
     timestamp = int(jsonObject['timestamp'])
     os = str(jsonObject['os'])
     errorText = str(jsonObject['errorText'])
+    stacktrace = str(jsonObject['stacktrace'])
     return errormsg.ErrorMessage(userName=userName, appName=appName,
                                  timestamp=timestamp, os=os,
-                                 errorText=errorText)
+                                 errorText=errorText,stacktrace=stacktrace)
 
 def storeFromJson(jsonString):
     errorMessage = createErrorMsgFromJson(jsonString)
-    errormsg.store(errorMessage)
+    #errormsg.store(errorMessage)
+    errorline.upsertMulti(stacktraceparser.parseStackTrace(errorMessage.stacktrace),errorMessage.timestamp)
     application.upsert(errorMessage.appName, errorMessage.timestamp)
 
 
@@ -39,10 +43,17 @@ def toDiccFromFutures(apps,counters):
         dicc[apps[i].appName] = counter.getTotal(counters[i])
     return dicc
 
-
-def getAppCount(date,pagenumber):
+def getTimestamp(date):
     try:
         timestamp = int(time.mktime(datetime.datetime.strptime(date, '%Y%m%d%H%M%S').timetuple()))
     except:
         timestamp = int(time.time())
+    return timestamp
+
+def getAppCount(date,pagenumber):
+    timestamp = getTimestamp(date)
     return application.getAllApps(timestamp, pagenumber)
+
+def getTop(date):
+    timestamp = getTimestamp(date)
+    return errorline.getTop(timestamp)

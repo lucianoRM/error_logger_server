@@ -1,12 +1,12 @@
-import json
-
 import logging
 
 import datetime
+import time
 from google.appengine.runtime import DeadlineExceededError
+import config.config
 
 import counter
-import pages
+import errorline
 import requesthandler
 from errorline import ErrorLine
 from flask import Flask, request, render_template
@@ -32,15 +32,29 @@ def errors():
 def post_errors():
     try:
         requesthandler.storeFromJson(request.get_data())
-        return "OK!"
+        return "OK!",200
     except KeyError as e:
         return "",400
     except DeadlineExceededError as e:
         logging.warn(e)
 
-@app.route('/errors/apps' , methods=['GET'])
-def error_apps():
-    return json.dumps(get_apps_count())
+
+@app.route('/errors/tasks/ranking')
+def rank_errors():
+    errorline.updateTotal(int(time.time()))
+    return "OK",200
+
+@app.route('/errors/lines/ranking')
+def get_top():
+    date = request.args.get('date')
+    (top, timeInterval) = requesthandler.getTop(date)
+    print top
+    labels = [key.split("-")[0] for key in top.keys()]
+    values = top.values()
+    toDate = datetime.datetime.utcfromtimestamp(timeInterval + config.config.top_reset_time())
+    return render_template('ranking.html', values=values, labels=labels,
+                           fromDate=datetime.datetime.utcfromtimestamp(timeInterval),
+                           toDate=toDate, previous="?date=" + str(datetime.datetime.utcfromtimestamp(timeInterval - config.config.top_reset_time()).strftime('%Y%m%d%H%M%S')), next="?date=" + str(toDate.strftime('%Y%m%d%H%M%S')))
 
 def get_apps_count(date,pagenumber):
     return requesthandler.getAppCount(date,pagenumber)
@@ -57,14 +71,15 @@ def chart():
         page = 0
     if not date:
         date = datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
-    apps, page = get_apps_count(date,page)
+    apps, page, timeInterval = get_apps_count(date,page)
     labels = [app.split("-")[0] for app in apps.keys()]
     values = apps.values()
     next = page+1
     previous = page-1
     if previous < 0:
         previous = 0
-    return render_template('chart.html', values=values, labels=labels , page=page, next="?date=" + date + "&page=" + str(next), previous="?date=" + date + "&page=" + str(previous), date= datetime.datetime.strptime(date, '%Y%m%d%H%M%S').strftime('%Y/%m/%d %H:%M:%S'))
+    toDate = datetime.datetime.utcfromtimestamp(timeInterval + config.config.chart_reset_time())
+    return render_template('chart.html', values=values, labels=labels , page=page, next="?date=" + date + "&page=" + str(next), previous="?date=" + date + "&page=" + str(previous), date= datetime.datetime.strptime(date, '%Y%m%d%H%M%S').strftime('%Y-%m-%d %H:%M:%S'), toDate=toDate, previousDate="?date=" + str(datetime.datetime.utcfromtimestamp(timeInterval - config.config.chart_reset_time()).strftime('%Y%m%d%H%M%S')), nextDate="?date=" + str(toDate.strftime('%Y%m%d%H%M%S')))
 
 
 

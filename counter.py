@@ -72,7 +72,7 @@ def getTotal(futureList):
             total += future.get_result().count
     return total
 
-def increment(name,timestamp):
+def increment(name):
     """Increment the value for a given sharded counter.
     Args:
         name: The name of the counter.
