@@ -22,17 +22,15 @@ def hello_world():
     return 'Hello World!'
 
 @app.route('/errors', methods=['POST'])
-def errors():
- return post_errors()
-
 def post_errors():
     try:
         requesthandler.storeFromJson(request.get_data())
-        return "OK!",200
+        return "OK!", 200
     except KeyError as e:
-        return "",400
+        return "", 400
     except DeadlineExceededError as e:
         logging.warn(e)
+
 
 @app.route('/test',methods=['POST'])
 def test():
