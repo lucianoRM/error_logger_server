@@ -1,4 +1,4 @@
 cron:
 - description: update total line values
   url: /errors/tasks/ranking
-  schedule: every 10 minutes
+  schedule: every 5 minutes

@@ -1,7 +1,10 @@
+import json
 import logging
 
 import datetime
 import time
+
+from google.appengine.api.taskqueue import taskqueue
 from google.appengine.runtime import DeadlineExceededError
 import config.config
 
@@ -18,13 +21,6 @@ app = Flask(__name__)
 def hello_world():
     return 'Hello World!'
 
-@app.route('/test')
-def test():
-    e = ErrorLine(lineString="Hola!")
-    e.put()
-    counter.increment(str(e.key.id()))
-    return "Done"
-
 @app.route('/errors', methods=['POST'])
 def errors():
  return post_errors()
@@ -38,10 +34,18 @@ def post_errors():
     except DeadlineExceededError as e:
         logging.warn(e)
 
+@app.route('/test',methods=['POST'])
+def test():
+    jsonObject = json.loads(request.get_data())
+    print jsonObject
+    return "ok"
 
-@app.route('/errors/tasks/ranking')
+@app.route('/errors/tasks/ranking', methods=['POST','GET'])
 def rank_errors():
-    errorline.updateTotal(int(time.time()))
+    cursor = request.args.get('cursor')
+    cursor, more = requesthandler.handlecron(cursor)
+    if cursor and more:
+        taskqueue.add(url=request.path, params={'cursor' : cursor})
     return "OK",200
 
 @app.route('/errors/lines/ranking')
@@ -78,6 +82,7 @@ def chart():
     previous = page-1
     if previous < 0:
         previous = 0
+    date = datetime.datetime.utcfromtimestamp(timeInterval).strftime('%Y%m%d%H%M%S')
     toDate = datetime.datetime.utcfromtimestamp(timeInterval + config.config.chart_reset_time())
     return render_template('chart.html', values=values, labels=labels , page=page, next="?date=" + date + "&page=" + str(next), previous="?date=" + date + "&page=" + str(previous), date= datetime.datetime.strptime(date, '%Y%m%d%H%M%S').strftime('%Y-%m-%d %H:%M:%S'), toDate=toDate, previousDate="?date=" + str(datetime.datetime.utcfromtimestamp(timeInterval - config.config.chart_reset_time()).strftime('%Y%m%d%H%M%S')), nextDate="?date=" + str(toDate.strftime('%Y%m%d%H%M%S')))
 

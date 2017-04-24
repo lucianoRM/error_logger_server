@@ -2,6 +2,8 @@ import datetime
 import time
 import json
 
+from google.appengine.api.taskqueue import taskqueue
+
 import application
 import counter
 import errorline
@@ -57,3 +59,8 @@ def getAppCount(date,pagenumber):
 def getTop(date):
     timestamp = getTimestamp(date)
     return errorline.getTop(timestamp)
+
+
+def handlecron(cursor):
+    timestamp = int(time.time())
+    return errorline.updateBatch(timestamp,cursor)

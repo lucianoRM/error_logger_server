@@ -35,3 +35,6 @@ def top_reset_time():
 
 def top_quantity():
     return int(Config.get(section="ErrorLine", option="TOP_QUANTITY"))
+
+def batch_size():
+    return int(Config.get(section="ErrorLine", option="BATCH_SIZE"))

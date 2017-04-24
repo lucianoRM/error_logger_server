@@ -16,7 +16,7 @@ class ErrorLine(ndb.Model):
 
     @classmethod
     def getLinesToDisplay(cls,timeInterval):
-        return cls.query(ErrorLine.timeInterval == timeInterval).order(ErrorLine.total)
+        return cls.query(ErrorLine.timeInterval == timeInterval).order(-ErrorLine.total)
 
 
 def createKey(lineString, timestamp):
@@ -55,9 +55,9 @@ def updateCounter(key):
     counter.increment(key)
 
 
-def updateTotal(timestamp):
+def updateBatch(timestamp, cursor):
     timeInterval = getTimeInterval(timestamp)
-    lines = ErrorLine.getLinesToUpdate(timeInterval).fetch()
+    lines,next_cursor,more = ErrorLine.getLinesToUpdate(timeInterval).fetch_page(config.batch_size(), start_cursor=cursor)
     print lines
     counterValuesFutures = []
     for line in lines:
@@ -68,6 +68,7 @@ def updateTotal(timestamp):
         line.updated = False
         index += 1
     ndb.put_multi(lines)
+    return next_cursor,more
 
 def getTop(timestamp):
     timeInterval = getTimeInterval(timestamp)
